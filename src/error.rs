@@ -6,4 +6,8 @@ pub enum Error {
     UnKnownKeyName,
     #[fail(display = "parse int error: {:?}", err)]
     IntParseError { err: std::num::ParseIntError },
+    #[fail(display = "nom parse error: {}", string)]
+    NomParseError { string: String },
+    #[fail(display = "not complete parse: {}", rest)]
+    NotCompleteParse { rest: String },
 }

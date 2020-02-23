@@ -10,14 +10,21 @@ use parse::{
     input::{to_hold_command_key, to_push_command_key, to_release_command_key, CommandKey},
 };
 
-pub fn parse_command(input: &str) -> IResult<&str, Vec<CommandKey>> {
+pub fn parse_command(input: &str) -> Result<Vec<CommandKey>, error::Error> {
     let (rest, (_, command, _)) = tuple((
         multispace0,
         separated_list(sequence, alt((hold_key, push_key, release_key))),
         multispace0,
-    ))(input)?;
+    ))(input)
+    .map_err(|_| error::Error::NomParseError {
+        string: input.into(),
+    })?;
 
-    Ok((rest, command))
+    if rest.is_empty() == false {
+        return Err(error::Error::NotCompleteParse { rest: rest.into() });
+    }
+
+    Ok(command)
 }
 
 fn button(input: &str) -> IResult<&str, Key> {
@@ -74,26 +81,42 @@ fn buttons(input: &str) -> IResult<&str, Key> {
 }
 
 fn buffer_frame(input: &str) -> IResult<&str, &str> {
-    let (rest, (_, frame, _)) = tuple((buffer_start, numbers, buffer_end))(input)?;
+    let (rest, (_, _, _, frame, _, _, _)) = tuple((
+        multispace0,
+        buffer_start,
+        multispace0,
+        numbers,
+        multispace0,
+        buffer_end,
+        multispace0,
+    ))(input)?;
 
     Ok((rest, frame))
 }
 
 fn hold_frame(input: &str) -> IResult<&str, &str> {
-    let (rest, (_, frame, _)) = tuple((hold_start, numbers, hold_end))(input)?;
+    let (rest, (_, _, _, frame, _, _, _)) = tuple((
+        multispace0,
+        hold_start,
+        multispace0,
+        numbers,
+        multispace0,
+        hold_end,
+        multispace0,
+    ))(input)?;
 
     Ok((rest, frame))
 }
 
 fn push_key(input: &str) -> IResult<&str, CommandKey> {
-    let (rest, _) = tag("p")(input)?;
+    let (rest, _) = tuple((tag("p"), multispace0))(input)?;
     let (rest, command) = map_res(tuple((buttons, opt(buffer_frame))), to_push_command_key)(rest)?;
 
     Ok((rest, command))
 }
 
 fn release_key(input: &str) -> IResult<&str, CommandKey> {
-    let (rest, _) = tag("r")(input)?;
+    let (rest, _) = tuple((tag("r"), multispace0))(input)?;
     let (rest, command) =
         map_res(tuple((buttons, opt(buffer_frame))), to_release_command_key)(rest)?;
 
@@ -101,7 +124,7 @@ fn release_key(input: &str) -> IResult<&str, CommandKey> {
 }
 
 fn hold_key(input: &str) -> IResult<&str, CommandKey> {
-    let (rest, _) = tag("h")(input)?;
+    let (rest, _) = tuple((tag("h"), multispace0))(input)?;
     let (rest, command) = map_res(
         tuple((buttons, permutation((opt(hold_frame), opt(buffer_frame))))),
         to_hold_command_key,
@@ -128,20 +151,25 @@ mod tests {
 
     #[test]
     fn command_parse() {
-        let (_, commands) = parse_command("h4>r6>pC").unwrap();
+        // > の前後は半角スペース，タブ可
+        let commands = parse_command("h4 >       r6 > pC").unwrap();
         assert_eq!(commands.len(), 3);
     }
 
     #[test]
-    fn command_parse_fail() {
-        let (_, commands) = parse_command(
-            r#"
-
-        h4(60)[8] > r6[10] > pC[20] 　
-
-        "#,
+    fn command_parse_space() {
+        // キー入力ボタン部分以外は半角スペース，タブ，改行を許容
+        parse_command(
+            r#"h 4 (60)[ 8 ]
+            > r 6 [10 ]
+        > p C6 [ 20]"#,
         )
         .unwrap();
-        assert_eq!(commands.len(), 3);
+    }
+
+    #[test]
+    fn command_parse_fail() {
+        // キー入力ボタン部分に隙間ができるとだめ
+        parse_command(r#"h4(60)[8]>r6[10]>pC 6[20]"#).unwrap_err();
     }
 }
