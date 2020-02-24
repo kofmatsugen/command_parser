@@ -1,16 +1,22 @@
 mod error;
-mod parse;
+pub(crate) mod parse;
+pub mod resource;
 
 use nom::{
     branch::*, bytes::complete::*, character::complete::*, combinator::*, multi::*, sequence::*,
     IResult,
 };
-use parse::{
-    button::Key,
-    input::{to_hold_command_key, to_push_command_key, to_release_command_key, CommandKey},
-};
+use parse::input::{to_hold_command_key, to_push_command_key, to_release_command_key};
 
-pub fn parse_command(input: &str) -> Result<Vec<CommandKey>, error::Error> {
+pub use parse::button::Key;
+pub use parse::input::CommandKey;
+
+#[derive(Debug)]
+pub struct Command {
+    pub keys: Vec<CommandKey>,
+}
+
+pub fn parse_command(input: &str) -> Result<Command, error::Error> {
     let (rest, (_, command, _)) = tuple((
         multispace0,
         separated_list(sequence, alt((hold_key, push_key, release_key))),
@@ -24,7 +30,7 @@ pub fn parse_command(input: &str) -> Result<Vec<CommandKey>, error::Error> {
         return Err(error::Error::NotCompleteParse { rest: rest.into() });
     }
 
-    Ok(command)
+    Ok(Command { keys: command })
 }
 
 fn button(input: &str) -> IResult<&str, Key> {
@@ -153,7 +159,7 @@ mod tests {
     fn command_parse() {
         // > の前後は半角スペース，タブ可
         let commands = parse_command("h4 >       r6 > pC").unwrap();
-        assert_eq!(commands.len(), 3);
+        assert_eq!(commands.keys.len(), 3);
     }
 
     #[test]
