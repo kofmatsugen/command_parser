@@ -148,6 +148,34 @@ fn hold_key(input: &str) -> IResult<&str, CommandKey> {
     Ok((rest, command))
 }
 
+impl std::fmt::Display for Command {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let ser: String = self
+            .keys()
+            .map(|k| match k {
+                CommandKey::Push { key, .. } => {
+                    let mut ser = String::new();
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+                CommandKey::Release { key, .. } => {
+                    let mut ser = String::new();
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+                CommandKey::Hold { key, .. } => {
+                    let mut ser = String::new();
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(">");
+
+        write!(f, "{}", ser)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
