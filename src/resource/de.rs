@@ -1,4 +1,4 @@
-use crate::{parse_command, Command};
+use crate::{parse::parse_command, Command};
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use std::fmt;
 

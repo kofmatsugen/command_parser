@@ -7,8 +7,7 @@ impl Serialize for Command {
         S: Serializer,
     {
         let ser: String = self
-            .keys
-            .iter()
+            .keys()
             .map(|k| match k {
                 CommandKey::Push { key, buffer_frame } => {
                     let mut ser = String::new();
@@ -36,11 +35,11 @@ impl Serialize for Command {
                     let mut ser = String::new();
                     ser.push_str("h");
                     ser.push_str(&format!("{}", key));
-                    if let Some(buffer_frame) = buffer_frame {
-                        ser.push_str(&format!("[{}]", buffer_frame));
-                    }
                     if let Some(hold_frame) = hold_frame {
                         ser.push_str(&format!("({})", hold_frame));
+                    }
+                    if let Some(buffer_frame) = buffer_frame {
+                        ser.push_str(&format!("[{}]", buffer_frame));
                     }
                     ser
                 }
