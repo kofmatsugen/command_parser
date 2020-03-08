@@ -16,6 +16,8 @@ bitflags::bitflags! {
         const FU = 1 << 9;
         const BD = 1 << 10;
         const BU = 1 << 11;
+
+        const NEUTRAL = 1 << 12;
     }
 }
 
@@ -43,18 +45,6 @@ impl std::str::FromStr for Key {
 
 impl std::fmt::Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if self.contains(Key::A) {
-            f.write_str("A")?;
-        }
-        if self.contains(Key::B) {
-            f.write_str("B")?;
-        }
-        if self.contains(Key::C) {
-            f.write_str("C")?;
-        }
-        if self.contains(Key::D) {
-            f.write_str("D")?;
-        }
         if self.contains(Key::FORWARD) {
             f.write_str("6")?;
         }
@@ -75,10 +65,26 @@ impl std::fmt::Display for Key {
             f.write_str("3")?;
         }
         if self.contains(Key::BU) {
-            f.write_str("1")?;
+            f.write_str("7")?;
         }
         if self.contains(Key::BD) {
-            f.write_str("7")?;
+            f.write_str("1")?;
+        }
+
+        if self.contains(Key::NEUTRAL) {
+            f.write_str("・")?;
+        }
+        if self.contains(Key::A) {
+            f.write_str("A")?;
+        }
+        if self.contains(Key::B) {
+            f.write_str("B")?;
+        }
+        if self.contains(Key::C) {
+            f.write_str("C")?;
+        }
+        if self.contains(Key::D) {
+            f.write_str("D")?;
         }
 
         Ok(())
