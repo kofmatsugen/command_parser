@@ -1,4 +1,4 @@
-use crate::{Command, CommandKey};
+use crate::{command::Command, CommandKey};
 use serde::ser::{Serialize, Serializer};
 
 impl Serialize for Command {

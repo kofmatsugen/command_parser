@@ -1,4 +1,4 @@
-use crate::{parse::parse_command, Command};
+use crate::{command::Command, types::build_command};
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use std::fmt;
 
@@ -14,7 +14,7 @@ impl<'de> Visitor<'de> for CommandVisitor {
     where
         E: de::Error,
     {
-        parse_command(s).map_err(de::Error::custom)
+        build_command(s).map_err(de::Error::custom)
     }
 }
 

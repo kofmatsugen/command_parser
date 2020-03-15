@@ -1,11 +1,15 @@
+mod command;
 mod error;
-pub(crate) mod parse;
 pub mod resource;
+pub(crate) mod types;
 
-pub use parse::{button::Key, input::CommandKey, Command};
+pub use crate::{
+    command::Command,
+    types::{button::Key, input::CommandKey},
+};
 
 pub fn deserialize(data: &str) -> Result<Command, failure::Error> {
-    Ok(parse::parse_command(data)?)
+    Ok(types::build_command(data)?)
 }
 
 pub fn serialize(command: &Command) -> Result<String, failure::Error> {

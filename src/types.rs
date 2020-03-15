@@ -1,7 +1,7 @@
 pub mod button;
 pub mod input;
 
-use crate::error;
+use crate::{command::Command, error};
 use button::Key;
 use input::CommandKey;
 use input::{to_hold_command_key, to_push_command_key, to_release_command_key};
@@ -10,22 +10,7 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug)]
-pub struct Command {
-    keys: Vec<CommandKey>,
-}
-
-impl Command {
-    pub fn new(command: &str) -> Result<Self, failure::Error> {
-        Ok(parse_command(command)?)
-    }
-
-    pub fn keys(&self) -> impl Iterator<Item = &CommandKey> {
-        self.keys.iter()
-    }
-}
-
-pub fn parse_command(input: &str) -> Result<Command, error::Error> {
+pub fn build_command(input: &str) -> Result<Command, error::Error> {
     let (rest, (_, command, _)) = tuple((
         multispace0,
         separated_list(sequence, alt((hold_key, push_key, release_key))),
@@ -39,7 +24,7 @@ pub fn parse_command(input: &str) -> Result<Command, error::Error> {
         return Err(error::Error::NotCompleteParse { rest: rest.into() });
     }
 
-    Ok(Command { keys: command })
+    Ok(Command::new(command))
 }
 
 fn button(input: &str) -> IResult<&str, Key> {
@@ -195,14 +180,14 @@ mod tests {
     #[test]
     fn command_parse() {
         // > の前後は半角スペース，タブ可
-        let commands = parse_command("h4 >       r6 > pC").unwrap();
-        assert_eq!(commands.keys.len(), 3);
+        let commands = build_command("h4 >       r6 > pC").unwrap();
+        assert_eq!(commands.keys().count(), 3);
     }
 
     #[test]
     fn command_parse_space() {
         // キー入力ボタン部分以外は半角スペース，タブ，改行を許容
-        parse_command(
+        build_command(
             r#"h 4 (60)[ 8 ]
             > r 6 [10 ]
         > p C6 [ 20]"#,
@@ -213,6 +198,6 @@ mod tests {
     #[test]
     fn command_parse_fail() {
         // キー入力ボタン部分に隙間ができるとだめ
-        parse_command(r#"h4(60)[8]>r6[10]>pC 6[20]"#).unwrap_err();
+        build_command(r#"h4(60)[8]>r6[10]>pC 6[20]"#).unwrap_err();
     }
 }

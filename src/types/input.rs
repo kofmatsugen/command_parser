@@ -1,4 +1,4 @@
-use crate::{error::Error, parse::button::Key};
+use crate::{error::Error, types::button::Key};
 
 #[derive(Debug)]
 pub enum CommandKey {
