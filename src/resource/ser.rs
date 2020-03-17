@@ -43,6 +43,18 @@ impl Serialize for Command {
                     }
                     ser
                 }
+                CommandKey::On { key } => {
+                    let mut ser = String::new();
+                    ser.push_str("n");
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+                CommandKey::Off { key } => {
+                    let mut ser = String::new();
+                    ser.push_str("f");
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
             })
             .collect::<Vec<_>>()
             .join(">");

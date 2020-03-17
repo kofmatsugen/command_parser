@@ -4,7 +4,9 @@ pub mod input;
 use crate::{command::Command, error};
 use button::Key;
 use input::CommandKey;
-use input::{to_hold_command_key, to_push_command_key, to_release_command_key};
+use input::{
+    to_hold_command_key, to_off_key, to_on_key, to_push_command_key, to_release_command_key,
+};
 use nom::{
     branch::*, bytes::complete::*, character::complete::*, combinator::*, multi::*, sequence::*,
     IResult,
@@ -13,7 +15,10 @@ use nom::{
 pub fn build_command(input: &str) -> Result<Command, error::Error> {
     let (rest, (_, command, _)) = tuple((
         multispace0,
-        separated_list(sequence, alt((hold_key, push_key, release_key))),
+        separated_list(
+            sequence,
+            alt((hold_key, push_key, release_key, on_key, off_key)),
+        ),
         multispace0,
     ))(input)
     .map_err(|_| error::Error::NomParseError {
@@ -41,6 +46,7 @@ fn stick(input: &str) -> IResult<&str, Key> {
             tag("2"),
             tag("3"),
             tag("4"),
+            tag("5"),
             tag("6"),
             tag("7"),
             tag("8"),
@@ -133,6 +139,20 @@ fn hold_key(input: &str) -> IResult<&str, CommandKey> {
     Ok((rest, command))
 }
 
+fn on_key(input: &str) -> IResult<&str, CommandKey> {
+    let (rest, _) = tuple((tag("n"), multispace0))(input)?;
+    let (rest, command) = map_res(buttons, to_on_key)(rest)?;
+
+    Ok((rest, command))
+}
+
+fn off_key(input: &str) -> IResult<&str, CommandKey> {
+    let (rest, _) = tuple((tag("f"), multispace0))(input)?;
+    let (rest, command) = map_res(buttons, to_off_key)(rest)?;
+
+    Ok((rest, command))
+}
+
 impl std::fmt::Display for Command {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let ser: String = self
@@ -149,6 +169,16 @@ impl std::fmt::Display for Command {
                     ser
                 }
                 CommandKey::Hold { key, .. } => {
+                    let mut ser = String::new();
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+                CommandKey::On { key } => {
+                    let mut ser = String::new();
+                    ser.push_str(&format!("{}", key));
+                    ser
+                }
+                CommandKey::Off { key } => {
                     let mut ser = String::new();
                     ser.push_str(&format!("{}", key));
                     ser

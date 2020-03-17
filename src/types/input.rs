@@ -2,6 +2,7 @@ use crate::{error::Error, types::button::Key};
 
 #[derive(Debug)]
 pub enum CommandKey {
+    // 押したときのトリガー
     Push {
         key: Key,
         buffer_frame: Option<u32>,
@@ -14,6 +15,12 @@ pub enum CommandKey {
         key: Key,
         buffer_frame: Option<u32>,
         hold_frame: Option<u32>,
+    },
+    On {
+        key: Key,
+    },
+    Off {
+        key: Key,
     },
 }
 
@@ -56,4 +63,12 @@ pub(crate) fn to_hold_command_key(
         hold_frame,
         buffer_frame,
     })
+}
+
+pub(crate) fn to_on_key(key: Key) -> Result<CommandKey, Error> {
+    Ok(CommandKey::On { key })
+}
+
+pub(crate) fn to_off_key(key: Key) -> Result<CommandKey, Error> {
+    Ok(CommandKey::Off { key })
 }

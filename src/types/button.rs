@@ -34,10 +34,11 @@ impl std::str::FromStr for Key {
             "2" => Ok(Key::DOWN),
             "3" => Ok(Key::FD),
             "4" => Ok(Key::BACKWARD),
+            "5" => Ok(Key::NEUTRAL),
             "6" => Ok(Key::FORWARD),
             "7" => Ok(Key::BU),
             "8" => Ok(Key::UP),
-            "9" => Ok(Key::BU),
+            "9" => Ok(Key::FU),
             _ => Err(Error::UnKnownKeyName),
         }
     }
@@ -72,7 +73,7 @@ impl std::fmt::Display for Key {
         }
 
         if self.contains(Key::NEUTRAL) {
-            f.write_str("・")?;
+            f.write_str("5")?;
         }
         if self.contains(Key::A) {
             f.write_str("A")?;

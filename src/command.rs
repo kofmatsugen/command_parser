@@ -31,6 +31,7 @@ impl Command {
         let inputs_rev = inputs_rev.by_ref();
         self.keys().rev().all(|key| match key {
             &CommandKey::Push { key, buffer_frame } => {
+                log::trace!("push: Key = {:?}, buffer = {:?}", key, buffer_frame);
                 let buffer_frame = buffer_frame.unwrap_or(default_buffer);
                 // ボタンを押したときは直前がそのボタンじゃなかったとき
                 // 最後の入力を見つけたあと，その後のカウント数と合わせてバッファフレーム内に収まるか
@@ -47,19 +48,28 @@ impl Command {
                     .unwrap_or(false)
             }
             &CommandKey::Release { key, buffer_frame } => {
+                log::trace!("release: Key = {:?}, buffer = {:?}", key, buffer_frame);
                 let buffer_frame = buffer_frame.unwrap_or(default_buffer);
                 // ボタン離しは最後に入力があったもののあとなので，最後の入力位置を探す
                 let position = inputs_rev
                     .position(|input| input.contains(key))
                     .map(|p| p as u32);
                 // 見つけたのは最後の入力なので，その直後からバッファフレーム内ならOK
-                position.map(|p| p < buffer_frame + 1).unwrap_or(false)
+                position
+                    .map(|p| p > 0 && p < buffer_frame + 1)
+                    .unwrap_or(false)
             }
             &CommandKey::Hold {
                 key,
                 buffer_frame,
                 hold_frame,
             } => {
+                log::trace!(
+                    "hold: Key = {:?}, hold = {:?}, buffer = {:?}",
+                    key,
+                    hold_frame,
+                    buffer_frame
+                );
                 let buffer_frame = buffer_frame.unwrap_or(default_buffer);
                 let hold_frame = hold_frame.unwrap_or(default_hold);
                 let position = inputs_rev
@@ -75,6 +85,20 @@ impl Command {
 
                 // バッファ内かつタメ時間をクリアしていればOK
                 buffer_ok && hold_ok
+            }
+            &CommandKey::On { key } => {
+                // 最後の入力が必要な入力ならOK
+                inputs_rev
+                    .next()
+                    .map(|input| input.contains(key))
+                    .unwrap_or(false)
+            }
+            &CommandKey::Off { key } => {
+                // 最後の入力が必要な入力を含んでいなければOK
+                inputs_rev
+                    .next()
+                    .map(|input| input.contains(key) == false)
+                    .unwrap_or(true)
             }
         })
     }
